@@ -6,3 +6,6 @@
 
 # Dependency directories
 /vendor/
+
+# Download
+downloads

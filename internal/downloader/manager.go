@@ -1,7 +1,8 @@
-package main
+package downloader
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -10,10 +11,19 @@ import (
 	"time"
 )
 
+// DownloadResult holds the outcome of a single download operation.
+type DownloadResult struct {
+	URL      string
+	FileName string
+	Size     int64
+	Duration time.Duration
+	Error    error
+}
+
 // ConcurrentDownloader manages the worker pool and orchestrates teh downloads
 func ConcurrentDownloader(urls []string, destDir string, maxConcurrent int) error {
 	if err := os.MkdirAll(destDir, 0755); err != nil {
-		return ErrorCreatingDirectory
+		return fmt.Errorf("error creating directory: %w", err)
 	}
 
 	// If the entire batch takes longer than 1 minute, all active download will be cancelled

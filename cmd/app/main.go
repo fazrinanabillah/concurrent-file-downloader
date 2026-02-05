@@ -3,6 +3,8 @@ package main
 import (
 	"log/slog"
 	"os"
+
+	"github.com/fazrinanabillah/concurrent-file-downloader/internal/downloader"
 )
 
 func main() {
@@ -16,7 +18,7 @@ func main() {
 	urls = append(urls, "https://go.dev/images/go-logo-blue.svg")
 
 	// Run the downloader with concurrency limit of 3
-	if err := ConcurrentDownloader(urls, "./downloads", 3); err != nil {
+	if err := downloader.ConcurrentDownloader(urls, "./downloads", 3); err != nil {
 		slog.Error("Application error", "error", err)
 		os.Exit(1)
 	}
