@@ -23,7 +23,7 @@ func DownloadFile(url, destDir string) error {
 
 	defer out.Close()
 
-	fmt.Println("Downloading from: ", url)
+	slog.Info("Downloading from", "url", url)
 	start := time.Now().UTC()
 
 	resp, err := http.Get(url)
@@ -35,27 +35,47 @@ func DownloadFile(url, destDir string) error {
 
 	// Check for server response
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status: %s", resp.Status)
+		return fmt.Errorf("request failed: %s", resp.Status)
 	}
 
 	// Stream the body content to the local file
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to save file content: %w", err)
 	}
 
-	fmt.Printf("Download finished in %s\n", time.Since(start))
+	slog.Info("Download finished", "duration", time.Since(start))
 
 	return nil
 }
 
-func main() {
-	url := "https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-word.jpg"
+func SequentialDownloader(urls []string, destDir string) error {
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return fmt.Errorf("failed to creating directory: %w", err)
+	}
 
-	if err := DownloadFile(url, "./"); err != nil {
+	start := time.Now().UTC()
+	for _, url := range urls {
+		if err := DownloadFile(url, destDir); err != nil {
+			slog.Error("Error downloading", "url", url)
+			continue
+		}
+	}
+
+	slog.Info("All downloads finished", "duration", time.Since(start))
+	return nil
+}
+
+func main() {
+	urls := []string{
+		"https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-word.jpg",
+		"https://go.dev/images/go-logo-blue.svg",
+	}
+
+	if err := SequentialDownloader(urls, "./"); err != nil {
 		slog.Error(err.Error())
 		return
 	}
 
-	fmt.Println("All tasks completed successfully")
+	slog.Info("All tasks completed successfully")
 }
